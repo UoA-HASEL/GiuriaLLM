@@ -1,6 +1,12 @@
 # GiuriaLLM
 
-GiuriaLLM is a configurable LLM-as-a-judge framework for software engineering. It evaluates software artifacts using one LLM or a panel, with tasks, criteria, models, and input data defined in YAML. It supports pointwise scoring, pairwise comparison, and listwise ranking or selection, and reports verdicts and resource use. To assess judge reliability, it measures how often verdicts change when candidates are reordered. When human annotations are available, it compares judge and human label distributions and reports results by human agreement. Supported providers include Anthropic, OpenAI, OpenAI-compatible endpoints, and local models served by Ollama.
+GiuriaLLM is a configurable LLM-as-a-judge framework for software engineering. It evaluates software artifacts using one LLM or a panel, with tasks, criteria, models, and input data defined in YAML.
+
+- **Evaluation:** pointwise scoring, pairwise comparison, and listwise ranking or selection, with verdicts and resource-use reports.
+- **Order sensitivity:** measures how often verdicts change when candidates are reordered.
+- **Human alignment:** compares judge and human label distributions and reports results by human agreement, when annotations are available.
+
+Supported providers include Anthropic, OpenAI, OpenAI-compatible endpoints, and local models served by Ollama.
 
 <p align="center">
   <img src="docs/assets/overview.png" alt="GiuriaLLM overview: inputs, judging workflow, and outputs" width="480">
