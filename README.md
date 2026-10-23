@@ -6,7 +6,7 @@ GiuriaLLM evaluates software artifacts using one LLM or a panel of judges. A YAM
 
 It supports pointwise scoring, pairwise comparison, and listwise ranking or selection. Judges can use Anthropic, OpenAI, OpenAI-compatible endpoints, or local models served by Ollama.
 
-GiuriaLLM overview: inputs, judging workflow, and outputs
+![GiuriaLLM overview: inputs, judging workflow, and outputs](docs/assets/overview.png)
 
 ## Quick start with Docker
 
