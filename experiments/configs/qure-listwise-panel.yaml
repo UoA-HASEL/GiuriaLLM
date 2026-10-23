@@ -1,0 +1,104 @@
+# QuRE (Femmer et al., arXiv 2508.08868) weak-word quality defects, listwise.
+# Each item lists 5 industrial requirements sharing one weak word; exactly one
+# was labelled a defect by Mercedes-Benz reviewers. The judge ranks the five by
+# how likely the weak word is a defect in context; meta-evaluation scores the
+# top-ranked requirement against the reviewer label. Built by
+# preparation/build_qure_listwise.py (<=6 lists per weak word, trimmed to 100, seed 0).
+#
+#   giuriallm run configs/qure-listwise-panel.yaml --provider mock   # offline
+#   Set OPENAI_API_KEY and AIHUBMIX_API_KEY, then run configs/qure-listwise-panel.yaml.
+# Panel: gpt-6-sol (OpenAI) + gpt-5.4-mini (OpenAI) + DeepSeek-V4-flash (via aihubmix, tools mode);
+# aggregation majority_vote. Derived from qure-listwise-luna.yaml.
+name: qure-listwise-panel
+judge:
+  type: listwise
+  criteria:
+  - name: defect_likelihood
+    definition: 'How likely is it that the shared weak word makes THIS requirement ambiguous, vague, or
+      untestable, so that a reviewer would flag it as a quality defect? A weak word used inside a fixed
+      technical term or with a precise, verifiable meaning in context is not a defect. Direction: the
+      candidate whose weak word is MOST likely a defect satisfies this criterion best and must be ranked
+      FIRST; the candidate whose use is most precise is ranked LAST.'
+    scale:
+      kind: binary
+  reference:
+    mode: none
+  outputs:
+    result: ranking
+    explanation: false
+    feedback: false
+prompt:
+  strategy: cot
+  order: explain_then_rate
+debias:
+  position_swap: false
+  permutations: 3
+  report_flip_rate: true
+dataset:
+  path: ../data/qure-listwise.jsonl
+  fields:
+    id: id
+    context: prompt
+    candidates:
+    - r0
+    - r1
+    - r2
+    - r3
+    - r4
+meta_evaluation:
+  human_labels: ../data/qure-listwise-human.jsonl
+  metrics:
+  - cohen_kappa
+engine:
+  concurrency: 10
+  cache: false
+report:
+  output_dir: runs
+  formats:
+  - markdown
+  - json
+panel:
+  members:
+  - provider: openai
+    id: gpt-6-sol
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 2.0
+    - 10.0
+    options:
+      structured_output: json_schema
+      reasoning_effort: none
+      base_url: https://api.openai.com/v1
+      api_key_env: OPENAI_API_KEY
+  - provider: openai
+    id: gpt-5.4-mini
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 0.75
+    - 4.5
+    options:
+      structured_output: json_schema
+      reasoning_effort: none
+      base_url: https://api.openai.com/v1
+      api_key_env: OPENAI_API_KEY
+  - provider: openai
+    id: alicloud-deepseek-v4-flash-0731
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 0.142
+    - 0.284
+    options:
+      structured_output: tools
+      enable_thinking: false
+      base_url: https://aihubmix.com/v1
+      api_key_env: AIHUBMIX_API_KEY
+  aggregation: majority_vote

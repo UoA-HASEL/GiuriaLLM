@@ -1,0 +1,112 @@
+# CoNaLa code generation (Yin et al. 2018) with the multi-annotator Usefulness
+# grades of Evtikhiev et al. ("Out of the BLEU"), as redistributed by SE-Jury
+# (Zhou et al., arXiv 2505.20854). Pointwise: the judge sees the intent, one
+# generated snippet from one of five systems, and the reference snippet, and
+# grades Usefulness 0-4 with SE-Jury's anchors (SE-Jury rescales to 0-100; we
+# keep the human 0-4 scale). Built by preparation/build_conala_pointwise.py
+# (10 cells per agreement stratum x system, threshold 0.8, seed 0).
+#
+#   giuriallm run configs/conala-pointwise-panel.yaml --provider mock   # offline
+#   Set OPENAI_API_KEY and AIHUBMIX_API_KEY, then run configs/conala-pointwise-panel.yaml.
+# Panel: gpt-6-sol (OpenAI) + gpt-5.4-mini (OpenAI) + DeepSeek-V4-flash (via aihubmix, tools mode);
+# aggregation mean. Derived from conala-pointwise-luna.yaml.
+name: conala-pointwise-panel
+judge:
+  type: pointwise
+  criteria:
+  - name: usefulness
+    definition: Usefulness of the code snippet based on the problem description. Read the problem carefully
+      and identify the required functionality. Read the code snippet and check whether it covers all required
+      functionality of the problem. Compare the code snippet to the reference snippet, which is very helpful.
+    scale:
+      kind: likert
+      min: 0
+      max: 4
+      anchors:
+        '0': Snippet is not at all helpful, it is irrelevant to the problem.
+        '1': Snippet is slightly helpful, it contains information relevant to the problem, but it is easier
+          to write the solution from scratch.
+        '2': Snippet is somewhat helpful, it requires significant changes (compared to the size of the
+          snippet), but is still useful.
+        '3': Snippet is helpful, but needs to be slightly changed to solve the problem.
+        '4': Snippet is very helpful, it solves the problem.
+  reference:
+    mode: required
+  outputs:
+    result: graded
+    explanation: false
+    feedback: false
+prompt:
+  strategy: cot
+  order: explain_then_rate
+debias:
+  position_swap: false
+dataset:
+  path: ../data/conala-pointwise.jsonl
+  fields:
+    id: id
+    context: prompt
+    candidates:
+    - code
+    reference: reference
+meta_evaluation:
+  human_labels: ../data/conala-pointwise-human.jsonl
+  metrics:
+  - error
+  - spearman
+  - earth_movers_distance
+  stratify_by_agreement: true
+  agreement_threshold: 0.8
+engine:
+  concurrency: 10
+  cache: false
+report:
+  output_dir: runs
+  formats:
+  - markdown
+  - json
+panel:
+  members:
+  - provider: openai
+    id: gpt-6-sol
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 2.0
+    - 10.0
+    options:
+      structured_output: json_schema
+      reasoning_effort: none
+      base_url: https://api.openai.com/v1
+      api_key_env: OPENAI_API_KEY
+  - provider: openai
+    id: gpt-5.4-mini
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 0.75
+    - 4.5
+    options:
+      structured_output: json_schema
+      reasoning_effort: none
+      base_url: https://api.openai.com/v1
+      api_key_env: OPENAI_API_KEY
+  - provider: openai
+    id: alicloud-deepseek-v4-flash-0731
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 0.142
+    - 0.284
+    options:
+      structured_output: tools
+      enable_thinking: false
+      base_url: https://aihubmix.com/v1
+      api_key_env: AIHUBMIX_API_KEY
+  aggregation: mean

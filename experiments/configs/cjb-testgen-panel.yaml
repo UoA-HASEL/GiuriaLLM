@@ -1,0 +1,99 @@
+# CodeJudgeBench TestGen (Jiang et al., arXiv 2507.10535), pairwise.
+# Each item: a competitive-programming problem and two candidate unit tests
+# (input + expected output), one correct and one with a wrong expected output.
+# The judge picks the correct test from the problem statement alone (no
+# reference code, as in CJB). Only the Gemini-generated splits are used so that
+# a Claude judge never grades Claude-written tests. Built by
+# preparation/build_cjb_testgen.py (50 newest questions per Gemini split, seed 0).
+#
+#   giuriallm run configs/cjb-testgen-panel.yaml --provider mock   # offline
+#   Set OPENAI_API_KEY and AIHUBMIX_API_KEY, then run configs/cjb-testgen-panel.yaml.
+# Panel: gpt-6-sol (OpenAI) + gpt-5.4-mini (OpenAI) + DeepSeek-V4-flash (via aihubmix, tools mode);
+# aggregation majority_vote. Derived from cjb-testgen-luna.yaml.
+name: cjb-testgen-panel
+judge:
+  type: pairwise
+  criteria:
+  - name: test_correctness
+    definition: 'Is this unit test correct for the problem: is the input valid under the problem''s constraints,
+      and is the stated expected output exactly what a correct solution would produce for that input?
+      Work the input through the problem''s rules before deciding.'
+    scale:
+      kind: binary
+  reference:
+    mode: none
+  outputs:
+    result: best_choice
+    explanation: false
+    feedback: false
+prompt:
+  strategy: cot
+  order: explain_then_rate
+debias:
+  position_swap: true
+  report_flip_rate: true
+dataset:
+  path: ../data/cjb-testgen.jsonl
+  fields:
+    id: id
+    context: prompt
+    candidates:
+    - test_a
+    - test_b
+meta_evaluation:
+  human_labels: ../data/cjb-testgen-human.jsonl
+  metrics:
+  - cohen_kappa
+engine:
+  concurrency: 10
+  cache: false
+report:
+  output_dir: runs
+  formats:
+  - markdown
+  - json
+panel:
+  members:
+  - provider: openai
+    id: gpt-6-sol
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 2.0
+    - 10.0
+    options:
+      structured_output: json_schema
+      reasoning_effort: none
+      base_url: https://api.openai.com/v1
+      api_key_env: OPENAI_API_KEY
+  - provider: openai
+    id: gpt-5.4-mini
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 0.75
+    - 4.5
+    options:
+      structured_output: json_schema
+      reasoning_effort: none
+      base_url: https://api.openai.com/v1
+      api_key_env: OPENAI_API_KEY
+  - provider: openai
+    id: alicloud-deepseek-v4-flash-0731
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 0.142
+    - 0.284
+    options:
+      structured_output: tools
+      enable_thinking: false
+      base_url: https://aihubmix.com/v1
+      api_key_env: AIHUBMIX_API_KEY
+  aggregation: majority_vote

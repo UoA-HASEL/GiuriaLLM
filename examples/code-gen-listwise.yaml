@@ -1,0 +1,36 @@
+# Rank three implementations. Run offline with --provider mock.
+name: code-gen-listwise
+judge:
+  type: listwise
+  criteria:
+    - name: correctness
+      definition: Does the implementation return the sum for any list of integers, including an empty list?
+      scale: {kind: binary}
+  reference: {mode: none}
+  outputs:
+    result: ranking
+    explanation: true
+    feedback: false
+model:
+  provider: openai
+  id: gpt-4.1
+  samples: 1
+  max_tokens: 2048
+prompt:
+  strategy: direct
+debias:
+  permutations: 3
+  report_flip_rate: true
+dataset:
+  path: data/code-gen-listwise.jsonl
+  fields:
+    id: id
+    context: prompt
+    candidates: [candidate_a, candidate_b, candidate_c]
+meta_evaluation:
+  human_labels: data/code-gen-listwise-human.jsonl
+  metrics: [accuracy]
+  stratify_by_agreement: false
+report:
+  output_dir: runs
+  formats: [markdown, json]
