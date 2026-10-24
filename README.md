@@ -14,7 +14,23 @@ Supported providers include Anthropic, OpenAI, OpenAI-compatible endpoints, and 
 
 ## Quick start with Docker
 
-This example uses OpenAI's `gpt-5.4-mini` to evaluate one patch from APR-Assess. The image includes the configuration and input data. You need Docker and an OpenAI API key.
+The image includes an APR-Assess example with the bug context, a candidate patch, a correct reference patch, and five human annotations. You need Docker. Both options below print a report in the terminal and save output files under `runs/`.
+
+### Try without an API key
+
+Run the example with simulated judge responses to check the workflow. No API key is required, and no model calls are made. Mock verdicts and resource figures are for testing only.
+
+```bash
+mkdir -p runs
+docker run --rm --user "$(id -u):$(id -g)" \
+  -v "$PWD/runs:/work/runs" \
+  ghcr.io/uoa-hasel/giuriallm:latest \
+  run /opt/giuriallm/demo/configs/apr-patch.yaml --provider mock --no-cache
+```
+
+### Run with OpenAI
+
+Evaluate the same patch with OpenAI's `gpt-5.4-mini`. The model scores the patch as 0 (incorrect) or 1 (correct), and GiuriaLLM compares its verdict with the human annotations. You need an OpenAI API key. API usage is billed to your account.
 
 ```bash
 mkdir -p runs
@@ -25,19 +41,7 @@ docker run --rm --user "$(id -u):$(id -g)" \
   run /opt/giuriallm/demo/configs/apr-patch.yaml
 ```
 
-The input contains the bug context, a candidate patch, and a correct reference patch. The model scores the patch as 0 or 1, and GiuriaLLM compares its verdict with five human annotations. The report appears in the terminal, and output files are saved under `runs/`. API usage is billed to your OpenAI account.
-
-For an installation check without an API key:
-
-```bash
-mkdir -p runs
-docker run --rm --user "$(id -u):$(id -g)" \
-  -v "$PWD/runs:/work/runs" \
-  ghcr.io/uoa-hasel/giuriallm:latest \
-  run /opt/giuriallm/examples/code-gen-pairwise.yaml --provider mock --no-cache
-```
-
-Mock verdicts are test data. These commands use a POSIX shell. The [usage guide](docs/usage.md) covers YAML configuration, panels, custom endpoints, PowerShell, and the Python API. Versioned image tags are published with GitHub releases.
+These commands work in a macOS or Linux terminal. The [usage guide](docs/usage.md) covers YAML configuration, panels, custom endpoints, PowerShell, and the Python API. Versioned image tags are published with GitHub releases.
 
 ## Results
 
@@ -68,7 +72,7 @@ Use `giuriallm show RUN_DIR` to read saved results and `giuriallm summarize RUN_
 | [Listwise](examples/code-gen-listwise.yaml)               | Rank three implementations across candidate permutations  |
 
 
-Both APR configurations use the same [patch input](demo/data/apr-patch.jsonl) and [human annotations](demo/data/human-labels.jsonl). The original five-judge configuration uses AiHubMix. To run it with Docker, use the quick-start command with `AIHUBMIX_API_KEY` and `apr-five-judges.yaml` in place of `OPENAI_API_KEY` and `apr-patch.yaml`.
+Both APR examples use the same [patch input](demo/data/apr-patch.jsonl) and [human annotations](demo/data/human-labels.jsonl). The five-judge example calls models through AiHubMix. To run it with Docker, set `AIHUBMIX_API_KEY` to your AiHubMix API key, pass it with `-e AIHUBMIX_API_KEY`, and use the `apr-five-judges.yaml` configuration.
 
 In the recorded five-judge run, three judges were correct, two were incorrect, and the panel's majority verdict was correct. New runs may differ. The single-judge quick start does not reproduce that panel setup.
 
@@ -76,7 +80,7 @@ The [Zenodo archive](https://zenodo.org/records/23584777) contains the evaluatio
 
 ## Local installation
 
-Requires Python 3.11 or newer. From a POSIX shell:
+You need Python 3.11 or newer. Run these commands in a macOS or Linux terminal:
 
 ```bash
 git clone https://github.com/UoA-HASEL/GiuriaLLM.git
