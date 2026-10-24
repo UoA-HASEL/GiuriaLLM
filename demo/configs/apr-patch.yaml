@@ -1,0 +1,64 @@
+name: apr-openai
+judge:
+  type: pointwise
+  criteria:
+  - name: functional_correctness
+    definition: Does the patch correctly fix the bug? Read the patch and the failing
+      test cases carefully, and compare the patch with the gold patch, which is fully
+      correct. A patch is correct only if it fixes the root cause for all inputs,
+      not just the failing tests; a patch that merely makes the failing tests pass,
+      changes unrelated behaviour, or is incomplete is incorrect.
+    scale:
+      kind: binary
+  reference:
+    mode: required
+  outputs:
+    result: graded
+    explanation: false
+    feedback: false
+prompt:
+  strategy: cot
+  order: explain_then_rate
+  system_preamble: 'You are an expert software engineer acting as an impartial evaluator
+    of software artifacts. Return only a JSON object matching the supplied output
+    schema. Do not wrap the JSON in Markdown code fences. Do not include any text
+    before or after the JSON object. The JSON object must contain a scores array.
+    Use this output schema: {"type":"object","properties":{"scores":{"type":"array","items":{"type":"object","properties":{"criterion":{"type":"string","enum":["functional_correctness"]},"score":{"type":"integer","enum":[0,1]}},"required":["criterion","score"],"additionalProperties":false},"minItems":1,"maxItems":1}},"required":["scores"],"additionalProperties":false}'
+debias:
+  position_swap: false
+dataset:
+  path: ../data/apr-patch.jsonl
+  fields:
+    id: id
+    context: prompt
+    candidates:
+    - patch
+    reference: reference
+meta_evaluation:
+  human_labels: ../data/human-labels.jsonl
+  metrics:
+  - error
+  - jensen_shannon
+  stratify_by_agreement: true
+  agreement_threshold: 1.0
+engine:
+  concurrency: 1
+  cache: false
+  max_retries: 0
+  cache_dir: .cache
+report:
+  output_dir: runs
+  formats:
+  - markdown
+  - json
+model:
+  provider: openai
+  id: gpt-5.4-mini
+  # USD per million tokens: https://developers.openai.com/api/docs/models/gpt-5.4-mini
+  price_per_mtok: [0.75, 4.50]
+  temperature: null
+  max_tokens: 32768
+  samples: 1
+  options:
+    structured_output: json_schema
+    seed: false

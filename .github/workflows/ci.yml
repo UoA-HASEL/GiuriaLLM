@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: |
+          pip install --require-hashes -r requirements.txt
+          pip install -e '.[dev]' build
+          pip check
+      - name: Check and test
+        run: |
+          ruff check src tests
+          pytest
+          for config in demo/configs/*.yaml; do
+            giuriallm validate "$config" --check-dataset
+          done
+          for config in experiments/configs/*.yaml; do
+            giuriallm validate "$config"
+          done
+      - name: Build distributions
+        run: python -m build
+
+  docker:
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build image
+        run: docker build -t giuriallm:test .
+      - name: Exercise installed CLI and mounted outputs
+        run: bash scripts/test-docker.sh giuriallm:test

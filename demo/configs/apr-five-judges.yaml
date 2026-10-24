@@ -1,0 +1,118 @@
+name: demo-apr-194
+judge:
+  type: pointwise
+  criteria:
+  - name: functional_correctness
+    definition: Does the patch correctly fix the bug? Read the patch and the failing
+      test cases carefully, and compare the patch with the gold patch, which is fully
+      correct. A patch is correct only if it fixes the root cause for all inputs,
+      not just the failing tests; a patch that merely makes the failing tests pass,
+      changes unrelated behaviour, or is incomplete is incorrect.
+    scale:
+      kind: binary
+  reference:
+    mode: required
+  outputs:
+    result: graded
+    explanation: false
+    feedback: false
+prompt:
+  strategy: cot
+  order: explain_then_rate
+  system_preamble: 'You are an expert software engineer acting as an impartial evaluator
+    of software artifacts. Return only a JSON object matching the supplied output
+    schema. Do not wrap the JSON in Markdown code fences. Do not include any text
+    before or after the JSON object. The JSON object must contain a scores array.
+    Use this output schema: {"type":"object","properties":{"scores":{"type":"array","items":{"type":"object","properties":{"criterion":{"type":"string","enum":["functional_correctness"]},"score":{"type":"integer","enum":[0,1]}},"required":["criterion","score"],"additionalProperties":false},"minItems":1,"maxItems":1}},"required":["scores"],"additionalProperties":false}'
+debias:
+  position_swap: false
+dataset:
+  path: ../data/apr-patch.jsonl
+  fields:
+    id: id
+    context: prompt
+    candidates:
+    - patch
+    reference: reference
+meta_evaluation:
+  human_labels: ../data/human-labels.jsonl
+  metrics:
+  - error
+  - jensen_shannon
+  stratify_by_agreement: true
+  agreement_threshold: 1.0
+engine:
+  concurrency: 5
+  cache: false
+  max_retries: 0
+  cache_dir: .cache
+report:
+  output_dir: runs
+  formats:
+  - markdown
+  - json
+panel:
+  aggregation: majority_vote
+  members:
+  - provider: openai
+    id: gpt-6.1-sol
+    # USD per million tokens; input <= 272K. User-supplied AiHubMix rates.
+    price_per_mtok: [2.0, 10.0]
+    temperature: null
+    max_tokens: 32768
+    samples: 1
+    options:
+      base_url: https://aihubmix.com/v1
+      api_key_env: AIHUBMIX_API_KEY
+      structured_output: json_schema
+      seed: false
+    label: GPT
+  - provider: openai
+    id: gemini-4-argon
+    price_per_mtok: [2.0, 10.0]
+    temperature: null
+    max_tokens: 32768
+    samples: 1
+    options:
+      base_url: https://aihubmix.com/v1
+      api_key_env: AIHUBMIX_API_KEY
+      structured_output: json_schema
+      seed: false
+    label: Gemini
+  - provider: openai
+    id: claude-opus-5-5
+    price_per_mtok: [4.0, 20.0]
+    temperature: null
+    max_tokens: 32768
+    samples: 1
+    options:
+      base_url: https://aihubmix.com/v1
+      api_key_env: AIHUBMIX_API_KEY
+      structured_output: json_schema
+      seed: false
+    label: Claude
+  - provider: openai
+    id: qwen3.5-35b-a3b
+    # USD per million tokens; input <= 128K.
+    price_per_mtok: [0.0564, 0.4512]
+    temperature: null
+    max_tokens: 32768
+    samples: 1
+    options:
+      base_url: https://aihubmix.com/v1
+      api_key_env: AIHUBMIX_API_KEY
+      structured_output: json_schema
+      seed: false
+    label: Qwen
+  - provider: openai
+    id: mistral-large-3
+    price_per_mtok: [0.5, 1.5]
+    temperature: null
+    max_tokens: 32768
+    samples: 1
+    options:
+      base_url: https://aihubmix.com/v1
+      api_key_env: AIHUBMIX_API_KEY
+      structured_output: json_schema
+      seed: false
+    label: Mistral

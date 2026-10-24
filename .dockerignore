@@ -1,0 +1,17 @@
+**
+!Dockerfile
+!pyproject.toml
+!requirements.txt
+!README.md
+!LICENSE
+!src/
+!src/**
+!demo/
+!demo/configs/
+!demo/configs/**
+!demo/data/
+!demo/data/**
+**/__pycache__
+**/*.pyc
+**/.DS_Store
+**/._*

@@ -1,0 +1,103 @@
+# APR-Assess (SE-Jury, Zhou et al., arXiv 2505.20854): Defects4J tool patches
+# labelled correct / incorrect by 35 professional developers (Le et al., ICSE 2019). Pointwise, binary: the judge
+# sees the failing tests, the tool patch, and the human gold patch (SE-Jury S1
+# with reference) and decides whether the patch correctly fixes the bug.
+# SE-Jury asks for 0-100; we keep the human Y/N scale. Built by
+# preparation/build_apr_pointwise.py (Defects4J patches with failing-test context
+# <= 5000 chars, stratified by agreement x majority, 100 items, seed 0).
+#
+#   giuriallm run configs/apr-pointwise-panel.yaml --provider mock   # offline
+#   Set OPENAI_API_KEY and AIHUBMIX_API_KEY, then run configs/apr-pointwise-panel.yaml.
+# Panel: gpt-6-sol (OpenAI) + gpt-5.4-mini (OpenAI) + DeepSeek-V4-flash (via aihubmix, tools mode);
+# aggregation majority_vote. Derived from apr-pointwise-luna.yaml.
+name: apr-pointwise-panel
+judge:
+  type: pointwise
+  criteria:
+  - name: functional_correctness
+    definition: Does the patch correctly fix the bug? Read the patch and the failing test cases carefully,
+      and compare the patch with the gold patch, which is fully correct. A patch is correct only if it
+      fixes the root cause for all inputs, not just the failing tests; a patch that merely makes the failing
+      tests pass, changes unrelated behaviour, or is incomplete is incorrect.
+    scale:
+      kind: binary
+  reference:
+    mode: required
+  outputs:
+    result: graded
+    explanation: false
+    feedback: false
+prompt:
+  strategy: cot
+  order: explain_then_rate
+debias:
+  position_swap: false
+dataset:
+  path: ../data/apr-pointwise.jsonl
+  fields:
+    id: id
+    context: prompt
+    candidates:
+    - patch
+    reference: reference
+meta_evaluation:
+  human_labels: ../data/apr-pointwise-human.jsonl
+  metrics:
+  - error
+  - cohen_kappa
+  - jensen_shannon
+  stratify_by_agreement: true
+  agreement_threshold: 1.0
+engine:
+  concurrency: 10
+  cache: false
+report:
+  output_dir: runs
+  formats:
+  - markdown
+  - json
+panel:
+  members:
+  - provider: openai
+    id: gpt-6-sol
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 2.0
+    - 10.0
+    options:
+      structured_output: json_schema
+      reasoning_effort: none
+      base_url: https://api.openai.com/v1
+      api_key_env: OPENAI_API_KEY
+  - provider: openai
+    id: gpt-5.4-mini
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 0.75
+    - 4.5
+    options:
+      structured_output: json_schema
+      reasoning_effort: none
+      base_url: https://api.openai.com/v1
+      api_key_env: OPENAI_API_KEY
+  - provider: openai
+    id: alicloud-deepseek-v4-flash-0731
+    samples: 1
+    temperature: 0.0
+    thinking: disabled
+    max_tokens: 32768
+    price_per_mtok:
+    - 0.142
+    - 0.284
+    options:
+      structured_output: tools
+      enable_thinking: false
+      base_url: https://aihubmix.com/v1
+      api_key_env: AIHUBMIX_API_KEY
+  aggregation: majority_vote
