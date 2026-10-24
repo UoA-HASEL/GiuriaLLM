@@ -23,7 +23,7 @@ giuriallm summarize \
   -o experiments/summaries/conala-pointwise.json
 ```
 
-Use the corresponding directories for other benchmarks. Summaries report mean and sample standard deviation; Human baselines remain fixed. See [reports and metrics](../docs/usage.md#reports-and-metrics).
+Use the corresponding directories for other benchmarks. Summaries report the mean and sample standard deviation. Human baselines remain fixed. See [reports and metrics](../docs/usage.md#reports-and-metrics).
 
 ## Run new experiments
 
@@ -49,8 +49,8 @@ Each command runs all four tasks and incurs API charges. To run one task, append
 
 ## Optional data preparation
 
-The archived samples are ready to use. To rebuild them, install `pip install -e ".[validation]"` and use the scripts in [preparation/](preparation/). Their command-line options specify source files and output paths. [Source-check scripts](scripts/) compare samples with upstream data; the APR oracle requires a separate Defects4J environment.
+The archived samples are ready to use. To rebuild them, install `pip install -e ".[validation]"` and use the scripts in [preparation/](preparation/). Their command-line options specify source files and output paths. [Source-check scripts](scripts/) compare samples with upstream data. The APR oracle requires a separate Defects4J environment.
 
-Sources include [QuRE](https://zenodo.org/records/16049822), [CodeJudge-Bench](https://huggingface.co/datasets/mattymchen/codejudgebench), and [SE-Jury](https://github.com/Xin-Zhou-smu/SE-Jury). CoNaLa grades originate from [Out of the BLEU](https://github.com/JetBrains-Research/codegen-metrics); APR reference patches use [Defects4J](https://github.com/rjust/defects4j).
+Sources include [QuRE](https://zenodo.org/records/16049822), [CodeJudge-Bench](https://huggingface.co/datasets/mattymchen/codejudgebench), and [SE-Jury](https://github.com/Xin-Zhou-smu/SE-Jury). CoNaLa grades originate from [Out of the BLEU](https://github.com/JetBrains-Research/codegen-metrics). APR reference patches use [Defects4J](https://github.com/rjust/defects4j).
 
 Downloaded data and generated results are ignored by Git. Cite the original datasets and annotation studies when reusing them.

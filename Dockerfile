@@ -16,7 +16,6 @@ RUN pip install --require-hashes -r requirements.txt
 COPY pyproject.toml README.md LICENSE ./
 COPY src/ ./src/
 RUN pip install --no-deps . && rm -rf src
-COPY examples/ ./examples/
 COPY demo/ ./demo/
 
 RUN useradd --create-home --uid 1000 giuriallm \

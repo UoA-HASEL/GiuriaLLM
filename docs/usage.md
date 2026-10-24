@@ -36,14 +36,14 @@ Dataset and annotation paths are relative to the YAML file. Output paths are rel
 
 ## Models and panels
 
-The APR example uses one OpenAI model. Set `OPENAI_API_KEY` and edit `model.id` to change it. `samples` sets the number of judgements per presentation order; `max_tokens` limits output length. `temperature: null` leaves the sampling temperature unset.
+The APR example uses one OpenAI model. Set `OPENAI_API_KEY` and edit `model.id` to change it. `samples` sets the number of judgements per presentation order. `max_tokens` limits output length. `temperature: null` leaves the sampling temperature unset.
 
 | Provider | Credentials or service |
 | --- | --- |
 | `openai` | `OPENAI_API_KEY` |
 | `anthropic` | `ANTHROPIC_API_KEY` |
 | `ollama` | An installed model served at `http://localhost:11434` |
-| `mock` | No key; offline test responses |
+| `mock` | No key needed. Returns simulated responses. |
 
 For an OpenAI-compatible endpoint, keep `provider: openai`, use its model ID, and add:
 
@@ -82,7 +82,7 @@ Replace the placeholder model ID, add token prices, and provide keys for both se
 
 `prompt.strategy` supports `direct`, `cot`, `rubric`, `fewshot`, and `criteria_decomposed`. For few-shot prompting, set `prompt.examples` to a YAML file containing examples.
 
-Pairwise tasks swap candidates by default; set `debias.position_swap: false` to disable swapping. For listwise tasks, set `debias.permutations` above 1 to test multiple orders. Enable `debias.report_flip_rate` to report order sensitivity.
+Pairwise tasks swap candidates by default. Set `debias.position_swap: false` to disable swapping. For listwise tasks, set `debias.permutations` above 1 to test multiple orders. Enable `debias.report_flip_rate` to report order sensitivity.
 
 ## Human annotations
 
@@ -160,15 +160,15 @@ Reports contain Run summary, Judges, Evaluation, Resource use, and Notes. Select
 
 | Metric | Meaning |
 | --- | --- |
-| `error` | Normalized absolute error; incorrect-label rate for binary or categorical outcomes |
+| `error` | Normalized absolute error, or the incorrect-label rate for binary or categorical outcomes |
 | `accuracy` | Fraction of matching labels |
 | `cohen_kappa` / `krippendorff_alpha` | Agreement with reference labels |
 | `spearman` / `kendall` / `icc` | Correlation or agreement with human ratings |
 | `earth_movers_distance` / `jensen_shannon` | Comparison of judge and human label distributions |
 
-Coverage shows valid results and failures. **Number of items** counts the items evaluated in a table. **Human** compares each annotator with the others; `n` counts contributing annotators. Agreement groups refer to human agreement. **Flip rate** measures verdict changes across candidate orders. Notes explain unavailable values.
+Coverage shows valid results and failures. **Number of items** counts the items evaluated in a table. **Human** compares each annotator with the others. `n` counts contributing annotators. Agreement groups refer to human agreement. **Flip rate** measures verdict changes across candidate orders. Notes explain unavailable values.
 
-Resource use is averaged over all input items. Panel values sum its members. API time is cumulative, not wall-clock time; cost and energy are estimates.
+Resource use is averaged over all input items. Panel values sum its members. API time is cumulative, not wall-clock time. Cost and energy are estimates.
 
 With a local installation, read or summarize saved results without calling models:
 

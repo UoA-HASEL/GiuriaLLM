@@ -1,1 +1,0 @@
-{"id":"sum-1","prompt":"Return the sum of a list of integers, including an empty list.","candidate_a":"def total(values): return sum(values)","candidate_b":"def total(values): return values[0] + sum(values[1:])","candidate_c":"def total(values): return len(values)"}

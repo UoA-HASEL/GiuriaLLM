@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -205,3 +206,56 @@ def test_cli_run_end_to_end(tmp_path, capsys):
     run_dirs = list((tmp_path / "runs").iterdir())
     assert len(run_dirs) == 1
     assert main(["show", str(run_dirs[0])]) == 0
+
+
+@pytest.mark.parametrize("binary_first", [True, False])
+async def test_mock_respects_binary_scores_alongside_likert(tmp_path, binary_first):
+    from giuriallm.engine import run_config
+    from giuriallm.spec import parse_config
+
+    dataset = tmp_path / "items.jsonl"
+    dataset.write_text(
+        json.dumps({"id": "one", "prompt": "Fix the bug", "candidate": "patch"}) + "\n"
+    )
+    criteria = [
+        {
+            "name": "correctness",
+            "definition": "Fixes the bug.\nChecks all inputs.",
+            "scale": {"kind": "binary"},
+        },
+        {
+            "name": "readability",
+            "definition": "Easy to read.",
+            "scale": {"kind": "likert", "min": 1, "max": 5},
+        },
+    ]
+    if not binary_first:
+        criteria.reverse()
+    config = parse_config(
+        {
+            "judge": {"type": "pointwise", "criteria": criteria, "outputs": {"result": "graded"}},
+            "model": {"provider": "mock", "id": "offline", "samples": 32},
+            "dataset": {"path": str(dataset), "fields": {"candidates": ["candidate"]}},
+            "engine": {"cache": False},
+        }
+    )
+    result = await run_config(config)
+    assert result.n_judgements == 32
+    assert result.n_failed == 0
+
+
+def test_cli_apr_mock_quick_start(tmp_path, capsys):
+    config = Path(__file__).resolve().parents[1] / "demo/configs/apr-patch.yaml"
+    assert (
+        main(
+            ["run", str(config), "--provider", "mock", "--no-cache", "-o", str(tmp_path), "--quiet"]
+        )
+        == 0
+    )
+    directory = Path(capsys.readouterr().out.strip())
+    manifest = json.loads((directory / "manifest.json").read_text())
+    assert manifest["counts"]["judgements"] == 1
+    assert manifest["counts"]["failed_judgements"] == 0
+    judgement = json.loads((directory / "judgements.jsonl").read_text())
+    assert judgement["verdict"]["scores"][0]["score"] in (0, 1)
+    assert (directory / "report.md").is_file()

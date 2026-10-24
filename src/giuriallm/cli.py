@@ -1,7 +1,7 @@
 """Command-line interface.
 
-giuriallm run examples/code-gen-pairwise.yaml
-giuriallm validate examples/code-gen-pairwise.yaml
+giuriallm run demo/configs/apr-patch.yaml
+giuriallm validate demo/configs/apr-patch.yaml
 giuriallm show runs/<run-id>
 """
 

@@ -6,8 +6,6 @@
 !LICENSE
 !src/
 !src/**
-!examples/
-!examples/**
 !demo/
 !demo/configs/
 !demo/configs/**

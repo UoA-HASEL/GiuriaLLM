@@ -9,6 +9,7 @@ reproducible but carry no evaluative meaning. Never use it for results.
 from __future__ import annotations
 
 import hashlib
+import re
 from typing import Any
 
 from .base import LLMRequest, LLMResponse, Provider, RawUsage
@@ -20,6 +21,19 @@ class MockProvider(Provider):
     async def complete(self, request: LLMRequest) -> LLMResponse:
         rng = _Deterministic(request.cache_key)
         payload = _synthesise(request.schema, rng)
+        # The shared score schema only specifies a numeric type. Binary limits
+        # are in the compiler's criteria block, so read them without changing
+        # the prompts or schemas sent to real providers.
+        binary_criteria = {
+            name
+            for name, scale in re.findall(
+                r"^- ([^\n]+?): .*?^  scale: ([^\n]+)$", request.system, re.MULTILINE | re.DOTALL
+            )
+            if scale == "1 if the criterion is satisfied, 0 otherwise"
+        }
+        for entry in payload.get("scores", []):
+            if entry["criterion"] in binary_criteria:
+                entry["score"] = rng.below(2)
         text = f"[mock verdict for {request.model.id}]"
         usage = RawUsage(
             input_tokens=max(1, len(request.system) + len(request.user)) // 4,

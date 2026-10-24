@@ -29,9 +29,6 @@ jobs:
         run: |
           ruff check src tests
           pytest
-          for config in examples/*.yaml; do
-            giuriallm validate "$config" --check-dataset
-          done
           for config in demo/configs/*.yaml; do
             giuriallm validate "$config" --check-dataset
           done
