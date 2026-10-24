@@ -63,6 +63,8 @@ Use `giuriallm show RUN_DIR` to read saved results and `giuriallm summarize RUN_
 
 ### Five-judge demo
 
+<p align="center"><a href="https://www.youtube.com/watch?v=TEsb8A4yfWA"><img src="https://img.youtube.com/vi/TEsb8A4yfWA/maxresdefault.jpg" alt="Watch the GiuriaLLM five-judge demo" width="600"></a></p>
+
 The [five-judge configuration](demo/configs/apr-five-judges.yaml) evaluates the same [patch](demo/data/apr-patch.jsonl) used in the quick start and compares the verdicts with the same [human annotations](demo/data/human-labels.jsonl). In the recorded demo, three judges were correct, two were incorrect, and the panel's majority verdict was correct. New runs may differ.
 
 The configuration calls models through AiHubMix. To run it with Docker, set `AIHUBMIX_API_KEY` to your AiHubMix API key, pass it with `-e AIHUBMIX_API_KEY`, and use `/opt/giuriallm/demo/configs/apr-five-judges.yaml` as the configuration path.
